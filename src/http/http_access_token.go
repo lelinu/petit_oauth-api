@@ -1,8 +1,8 @@
 package http
 
-import(
+import (
 	"github.com/gin-gonic/gin"
-	"github.com/lelinu/api_utils/errors"
+	"github.com/lelinu/api_utils/utils/error_utils"
 	at "github.com/lelinu/petit_oauth-api/src/domain/access_token"
 	"github.com/lelinu/petit_oauth-api/src/services/access_token"
 	"net/http"
@@ -36,7 +36,7 @@ func (h *accessTokenHandler) GetById(g *gin.Context){
 func (h *accessTokenHandler) Create(g *gin.Context){
 	var request at.AccessTokenRequest
 	if err := g.ShouldBindJSON(&request); err != nil{
-		restErr := errors.NewBadRequestError("invalid JSON body")
+		restErr := error_utils.NewBadRequestError("invalid JSON body")
 		g.JSON(restErr.HttpStatusCode, restErr)
 		return
 	}

@@ -2,7 +2,7 @@ package rest
 
 import (
 	"encoding/json"
-	"github.com/lelinu/api_utils/errors"
+	"github.com/lelinu/api_utils/utils/error_utils"
 	"github.com/lelinu/petit_oauth-api/src/domain/users"
 	"github.com/mercadolibre/golang-restclient/rest"
 	"time"
@@ -10,13 +10,13 @@ import (
 
 var (
 	restClient = rest.RequestBuilder{
-		BaseURL: "https://api.petit.com",
+		BaseURL: "http://localhost:8081",
 		Timeout: 100 * time.Millisecond,
 	}
 )
 
 type IRestUsersRepository interface {
-	Login(string, string) (*users.User, *errors.ApiError)
+	Login(string, string) (*users.User, *error_utils.ApiError)
 }
 
 type usersRepository struct{}
@@ -25,7 +25,7 @@ func NewRepository() IRestUsersRepository {
 	return &usersRepository{}
 }
 
-func (r *usersRepository) Login(email string, password string) (*users.User, *errors.ApiError) {
+func (r *usersRepository) Login(email string, password string) (*users.User, *error_utils.ApiError) {
 	request := users.UserLoginRequest{
 		Email:    email,
 		Password: password,
@@ -33,13 +33,13 @@ func (r *usersRepository) Login(email string, password string) (*users.User, *er
 	response := restClient.Post("/users/login", request)
 	// timeout
 	if response == nil || response.Response == nil {
-		return nil, errors.NewInternalServerError("invalid rest client response when trying to login user")
+		return nil, error_utils.NewInternalServerError("invalid rest client response when trying to login user")
 	}
 	// error situation
 	if response.StatusCode > 299 {
-		var apiError errors.ApiError
+		var apiError error_utils.ApiError
 		if err := json.Unmarshal(response.Bytes(), &apiError); err != nil {
-			return nil, errors.NewInternalServerError("invalid rest error interface")
+			return nil, error_utils.NewInternalServerError("invalid rest error interface")
 		}
 		return nil, &apiError
 	}
@@ -47,7 +47,7 @@ func (r *usersRepository) Login(email string, password string) (*users.User, *er
 	// unmarshall user
 	var user users.User
 	if err := json.Unmarshal(response.Bytes(), &user); err != nil {
-		return nil, errors.NewInternalServerError("invalid rest user interface")
+		return nil, error_utils.NewInternalServerError("invalid rest user interface")
 	}
 
 	return &user, nil
